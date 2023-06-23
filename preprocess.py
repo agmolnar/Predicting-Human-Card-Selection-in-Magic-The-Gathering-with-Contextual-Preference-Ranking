@@ -128,7 +128,7 @@ def preprocess_data(card_dict, dir, outfile):
 
 def preprocess_data_into_dataset(inpath,outpath):
     for file in os.listdir(inpath):
-        dataset = mtg_dataset(inpath+file, 265)
+        dataset = mtg_dataset(inpath+file, 266)
         with open(outpath+file, 'wb') as f:
             pickle.dump(dataset,f)
             f.close()
@@ -175,35 +175,47 @@ def preprocess_evaldata_into_picks(inpath,outpath):
 
 def main(training_path,test_path):
     print('Preprocessing training data')
-    card_dict = utils.load_card_dict('Data/card_dict.pt')
-    training_out = 'E:/MtgBase/training_data/'
+    #card_dict = utils.load_card_dict('Data/card_dict.pt')
+    training_out = 'training_data/'
     if not os.path.exists(training_out):
         os.mkdir(training_out)
-   # preprocess_data(card_dict,training_path,training_out)
-    print('Preproessing training data into datasets')
-    training_dataset_out = 'E:/MtgBase/training_datasets/'
+    #preprocess_data(card_dict,training_path,training_out)
+    print('Preprocessing training data into datasets')
+    training_dataset_out = 'training_datasets/'
     if not os.path.exists(training_dataset_out):
         os.mkdir(training_dataset_out)
-#    preprocess_data_into_dataset(training_out,training_dataset_out)
+    #preprocess_data_into_dataset(training_out,training_dataset_out)
     
     print('Preprocessing test data')
-    test_out = 'E:/MtgBase/test_data/'
+    test_out = 'test_data/'
     if not os.path.exists(test_out):
         os.mkdir(test_out)
-   # preprocess_data(card_dict,test_path,test_out)
-    print('Preproessing test data into datasets')
-    test_dataset_out ='E:/MtgBase/test_datasets/'
+    #preprocess_data(card_dict,test_path,test_out)
+    
+    print('Preprocessing val data into datasets')
+    val_out = 'val_data/'
+    val_dataset_out ='val_datasets/'
+    if not os.path.exists(val_dataset_out):
+        os.mkdir(val_dataset_out)
+    #preprocess_data_into_dataset(val_out,val_dataset_out)
+    print('Creating val pick files')
+    valpick_out = 'valpicks/'
+    if not os.path.exists(valpick_out):
+        os.mkdir(valpick_out)
+    preprocess_evaldata_into_picks(val_dataset_out,valpick_out)
+    print('Preprocessing test data into datasets')
+    test_dataset_out ='test_datasets/'
     if not os.path.exists(test_dataset_out):
         os.mkdir(test_dataset_out)
-    preprocess_data_into_dataset(test_out,test_dataset_out)
-    print('Creating pick files')
-    pick_out = 'E:/MtgBase/picks/'
-    if not os.path.exists(pick_out):
-        os.mkdir(pick_out)
-    preprocess_evaldata_into_picks(test_dataset_out,pick_out)
+    #preprocess_data_into_dataset(test_out,test_dataset_out)
+    print('Creating test pick files')
+    testpick_out = 'testpicks/'
+    if not os.path.exists(testpick_out):
+        os.mkdir(testpick_out)
+    #preprocess_evaldata_into_picks(test_dataset_out,testpick_out)
 
 
 if __name__ == "__main__":
-    training_path = 'E:/train.csv'
-    test_path = 'E:/test.csv'
+    training_path = r'C:\Users\aguay\Documents\GitHub\Predicting-Human-Card-Selection-in-Magic-The-Gathering-with-Contextual-Preference-Ranking\Data\m19_drafts\train.csv'
+    test_path = r'C:\Users\aguay\Documents\GitHub\Predicting-Human-Card-Selection-in-Magic-The-Gathering-with-Contextual-Preference-Ranking\Data\m19_drafts\test.csv'
     main(training_path,test_path)

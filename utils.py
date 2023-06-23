@@ -15,8 +15,8 @@ from sklearn.linear_model import LinearRegression
 import collections
 
 def compute_pick_chance(path):
-    counts = np.zeros(265)
-    picks = np.zeros(265)
+    counts = np.zeros(266)
+    picks = np.zeros(266)
 
     for filename in os.listdir(path):
         with open(path+filename, 'rb') as f:
@@ -35,12 +35,12 @@ def compute_pick_chance(path):
                 last_deck = deck
                 last_pick = line[0]
     with open('pickrates.csv', 'w') as outfile:
-        for i in range(265):
+        for i in range(266):
             outfile.write(str(picks[i]/counts[i])+';'+str(picks[i])+'\n')
 
 def compute_firstpick_chance(path):
-    counts = np.zeros(265)
-    picks = np.zeros(265)
+    counts = np.zeros(266)
+    picks = np.zeros(266)
 
     for filename in os.listdir(path):
         with open(path+filename, 'rb') as f:
@@ -59,8 +59,8 @@ def compute_firstpick_chance(path):
                         counts[int(line[1])] += 1
                     last_deck = deck
                     last_pick = line[0]
-    with open('pickrates.csv', 'w') as outfile:
-        for i in range(265):
+    with open('firstpickrates.csv', 'w') as outfile:
+        for i in range(266):
             outfile.write(str(picks[i]/counts[i])+';'+str(picks[i])+'\n')
                 
 def pickrates_to_cards(dict_file,score_file):
@@ -77,8 +77,8 @@ def pickrates_to_cards(dict_file,score_file):
 
 def point_cloud(network,embedding = None):
     network = network.eval()
-    card_dict = load_card_dict('card_dict.pt')
-    inv_card_dict = {v:k for k,v in card_dict.items()}
+    #card_dict = load_card_dict('card_dict.pt')
+    #inv_card_dict = {v:k for k,v in card_dict.items()}
     
     cards = list()
     if embedding is not None:
@@ -88,13 +88,13 @@ def point_cloud(network,embedding = None):
     colors = list()
 
     distances = list()
-    with open('Data/named_pickrates.csv', 'r') as f:
-        reader = csv.reader(f, delimiter = ';')
+    with open('firstpickrate_full.csv', 'r') as f:
+        reader = csv.reader(f, delimiter = ',')
         lines = [line for line in reader]
-        indizes = [i for i in range(265)]
+        indizes = [i for i in range(266)]
         pickrates = [float(lines[index][1]) for index in indizes]
     with torch.no_grad():
-        empty = torch.zeros(1,265)
+        empty = torch.zeros(1,266)
         anchor = network(empty)
         distances.append(0)
         embeddings.append(anchor.squeeze().numpy())
@@ -102,14 +102,14 @@ def point_cloud(network,embedding = None):
         border_colors = list()
         border_colors.append('lime')
         color_map = {'Colourless' : 'purple', 'Red': 'red', 'Blue':'blue', 'Green':'green', 'White':'lightgrey','Black':'black'}
-        for card in range(265):
-            tmp = torch.zeros((1,265))
+        for card in range(266):
+            tmp = torch.zeros((1,266))
             tmp[0,card] = 1
             output = network(tmp)
             embeddings.append(output.squeeze().numpy())
             distances.append(networks.get_distance(anchor,output).item())
             c = lines[card][4]
-            c = c.split(',')
+            c = c.split(', ')
             if len(c) == 1:
                 colors.append(color_map[c[0]])
                 border_colors.append(color_map[c[0]])
@@ -143,13 +143,13 @@ def point_cloud_rarity(network,embedding = None):
     colors = list()
 
     distances = list()
-    with open('named_pickrates.csv', 'r') as f:
-        reader = csv.reader(f, delimiter = ';')
+    with open('firstpickrate_full.csv', 'r') as f:
+        reader = csv.reader(f, delimiter = ',')
         lines = [line for line in reader]
-        indizes = [i for i in range(265)]
+        indizes = [i for i in range(266)]
         pickrates = [float(lines[index][1]) for index in indizes]
     with torch.no_grad():
-        empty = torch.zeros(1,265)
+        empty = torch.zeros(1,266)
         anchor = network(empty)
         distances.append(0)
         embeddings.append(anchor.squeeze().numpy())
@@ -157,14 +157,14 @@ def point_cloud_rarity(network,embedding = None):
         border_colors = list()
         border_colors.append('lime')
         color_map = {'C' : 'black', 'U': 'silver', 'R':'gold', 'M':'brown'}
-        for card in range(265):
-            tmp = torch.zeros((1,265))
+        for card in range(266):
+            tmp = torch.zeros((1,266))
             tmp[0,card] = 1
             output = network(tmp)
             embeddings.append(output.squeeze().numpy())
             distances.append(networks.get_distance(anchor,output).item())
             c = lines[card][3]
-            c = c.split(',')
+            c = c.split(', ')
             if len(c) == 1:
                 colors.append(color_map[c[0]])
                 border_colors.append(color_map[c[0]])
@@ -198,21 +198,21 @@ def point_cloud_rarity(network,embedding = None):
 def plot_distance_against_fpr(network):
     network = network.eval()
     distances = list()
-    with open('named_firstpickrates.csv', 'r') as f:
-        reader = csv.reader(f, delimiter = ';')
+    with open('firstpickrate_full.csv', 'r') as f:
+        reader = csv.reader(f, delimiter = ',')
         lines = [line for line in reader]
-        indizes = [i for i in range(265)]
+        indizes = [i for i in range(266)]
         pickrates = [float(lines[index][1]) for index in indizes]
     with torch.no_grad():
-        empty = torch.zeros(1,265)
+        empty = torch.zeros(1,266)
         anchor = network(empty)
-        for card in range(265):
-            tmp = torch.zeros((1,265))
+        for card in range(266):
+            tmp = torch.zeros((1,266))
             tmp[0,card] = 1
             output = network(tmp)
             distances.append(networks.get_distance(anchor,output).item())
 
-    elements = [(pickrates[i],distances[i]) for i in range(265)]
+    elements = [(pickrates[i],distances[i]) for i in range(266)]
     elements.sort(key = lambda v: v[0])
 
     plt.scatter([element[0] for element in elements],[element[1] for element in elements], alpha = 0.6)
@@ -233,13 +233,13 @@ def point_cloud_anchors(network,embedding = None):
     colors = list()
 
     distances = list()
-    with open('named_pickrates.csv', 'r') as f:
-        reader = csv.reader(f, delimiter = ';')
+    with open('firstpickrate_full.csv', 'r') as f:
+        reader = csv.reader(f, delimiter = ',')
         lines = [line for line in reader]
-        indizes = [i for i in range(265)]
+        indizes = [i for i in range(266)]
         pickrates = [float(lines[index][1]) for index in indizes]
     with torch.no_grad():
-        empty = torch.zeros(1,265)
+        empty = torch.zeros(1,266)
         anchor = network(empty)
         distances.append(0)
         embeddings.append(anchor.squeeze().numpy())
@@ -247,8 +247,8 @@ def point_cloud_anchors(network,embedding = None):
         border_colors = list()
         border_colors.append('lime')
         color_map = {'Colourless' : 'purple', 'Red': 'red', 'Blue':'blue', 'Green':'green', 'White':'beige','Black':'black'}
-        for card in range(265):
-            tmp = torch.zeros((1,265))
+        for card in range(266):
+            tmp = torch.zeros((1,266))
             tmp[0,card] = 1
             output = network(tmp)
             embeddings.append(output.squeeze().numpy())
@@ -256,19 +256,19 @@ def point_cloud_anchors(network,embedding = None):
             colors.append('black')
             border_colors.append('black')
 
-        for i in range(50):
-            tmp = torch.zeros((1,265))
-            for _ in range(45):
-                tmp[0,np.random.randint(265)] = 1
+        for i in range(8):
+            tmp = torch.zeros((1,266))
+            for _ in range(42):
+                tmp[0,np.random.randint(266)] = 1
             embeddings.append(network(tmp).squeeze().numpy())
             colors.append('red')
             border_colors.append('red')
         
-        for i in range(50):
-            with open('E:/picks_2/'+np.random.choice(os.listdir('E:/picks_2/')), 'rb') as pick_file:
+        for i in range(8):
+            with open('picks/'+np.random.choice(os.listdir('picks/')), 'rb') as pick_file:
                 some_picks = np.load(pick_file, allow_pickle = True)
                 anchor = 0
-                while anchor != 44:
+                while anchor != 41:
                     anchor_array = some_picks[np.random.randint(some_picks.shape[0])]
                     anchor = sum(anchor_array[1])
                 input = anchor_array[1]+anchor_array[2]
@@ -302,13 +302,13 @@ def point_cloud_anchors_colors(network,embedding = None):
     colors = list()
 
     distances = list()
-    with open('named_pickrates.csv', 'r') as f:
-        reader = csv.reader(f, delimiter = ';')
+    with open('firstpickrate_full.csv', 'r') as f:
+        reader = csv.reader(f, delimiter = ',')
         lines = [line for line in reader]
-        indizes = [i for i in range(265)]
+        indizes = [i for i in range(266)]
         pickrates = [float(lines[index][1]) for index in indizes]
     with torch.no_grad():
-        empty = torch.zeros(1,265)
+        empty = torch.zeros(1,266)
         anchor = network(empty)
         distances.append(0)
         embeddings.append(anchor.squeeze().numpy())
@@ -316,8 +316,8 @@ def point_cloud_anchors_colors(network,embedding = None):
         border_colors = list()
         border_colors.append('lime')
         color_map = {'Colourless' : 'purple', 'Red': 'red', 'Blue':'blue', 'Green':'green', 'White':'beige','Black':'black'}
-        for card in range(265):
-            tmp = torch.zeros((1,265))
+        for card in range(266):
+            tmp = torch.zeros((1,266))
             tmp[0,card] = 1
             output = network(tmp)
             embeddings.append(output.squeeze().numpy())
@@ -325,16 +325,16 @@ def point_cloud_anchors_colors(network,embedding = None):
             colors.append('grey')
             border_colors.append('black')
         
-        for i in range(50):
-            with open('E:/picks_2/'+np.random.choice(os.listdir('E:/picks_2/')), 'rb') as pick_file:
+        for i in range(8):
+            with open('picks/'+np.random.choice(os.listdir('picks/')), 'rb') as pick_file:
                 some_picks = np.load(pick_file, allow_pickle = True)
                 anchor = 0
                 c = False
-                while anchor != 44 or not c:
+                while anchor != 41 or not c:
                     anchor_array = some_picks[np.random.randint(some_picks.shape[0])]
                     anchor = sum(anchor_array[1])
                     input = anchor_array[1]+anchor_array[2]
-                    if anchor == 44:
+                    if anchor == 41:
                         c = matching_colors(lines,input,'Red')                 
                         if c:
                             
@@ -384,13 +384,13 @@ def point_cloud_anchors_distances(network,embedding = None):
     tensor_embeddings = list()
 
     distances = list()
-    with open('named_pickrates.csv', 'r') as f:
-        reader = csv.reader(f, delimiter = ';')
+    with open('firstpickrate_full.csv', 'r') as f:
+        reader = csv.reader(f, delimiter = ',')
         lines = [line for line in reader]
-        indizes = [i for i in range(265)]
+        indizes = [i for i in range(266)]
         pickrates = [float(lines[index][1]) for index in indizes]
     with torch.no_grad():
-        empty = torch.zeros(1,265)
+        empty = torch.zeros(1,266)
         anchor = network(empty)
         distances.append(0)
         embeddings.append(anchor.squeeze().numpy())
@@ -398,8 +398,8 @@ def point_cloud_anchors_distances(network,embedding = None):
         border_colors = list()
         border_colors.append('lime')
         color_map = {'Colourless' : 'purple', 'Red': 'red', 'Blue':'blue', 'Green':'green', 'White':'beige','Black':'black'}
-        for card in range(265):
-            tmp = torch.zeros((1,265))
+        for card in range(266):
+            tmp = torch.zeros((1,266))
             tmp[0,card] = 1
             output = network(tmp)
             tensor_embeddings.append(output)
@@ -407,19 +407,19 @@ def point_cloud_anchors_distances(network,embedding = None):
             distances.append(networks.get_distance(anchor,output).item())
 
         for i in range(1):
-            tmp = torch.zeros((1,265))
-            for _ in range(45):
-                tmp[0,np.random.randint(265)] = 1
+            tmp = torch.zeros((1,266))
+            for _ in range(42):
+                tmp[0,np.random.randint(266)] = 1
             out = network(tmp)
             random_distances = [networks.get_distance(out,elem).item() for elem in tensor_embeddings]
             random_colors.extend(random_distances)
             embeddings.append(out.squeeze().numpy())
         
         for i in range(1):
-            with open('E:/picks_2/'+np.random.choice(os.listdir('E:/picks_2/')), 'rb') as pick_file:
+            with open('picks'+np.random.choice(os.listdir('picks')), 'rb') as pick_file:
                 some_picks = np.load(pick_file, allow_pickle = True)
                 anchor = 0
-                while anchor != 44:
+                while anchor != 41:
                     anchor_array = some_picks[np.random.randint(some_picks.shape[0])]
                     anchor = sum(anchor_array[1])
                 input = torch.Tensor(anchor_array[1]+anchor_array[2])
@@ -467,13 +467,13 @@ def point_cloud_distance_colour(network,embedding = None):
     colors = list()
 
     distances = list()
-    with open('named_pickrates.csv', 'r') as f:
-        reader = csv.reader(f, delimiter = ';')
+    with open('firstpickrate_full.csv', 'r') as f:
+        reader = csv.reader(f, delimiter = ',')
         lines = [line for line in reader]
-        indizes = [i for i in range(265)]
+        indizes = [i for i in range(266)]
         pickrates = [float(lines[index][1]) for index in indizes]
     with torch.no_grad():
-        empty = torch.zeros(1,265)
+        empty = torch.zeros(1,266)
         anchor = network(empty)
         distances.append(0)
         embeddings.append(anchor.squeeze().numpy())
@@ -481,14 +481,14 @@ def point_cloud_distance_colour(network,embedding = None):
         border_colors = list()
         border_colors.append('lime')
         color_map = {'Colourless' : 'purple', 'Red': 'red', 'Blue':'blue', 'Green':'green', 'White':'lightgrey','Black':'black'}
-        for card in range(265):
-            tmp = torch.zeros((1,265))
+        for card in range(266):
+            tmp = torch.zeros((1,266))
             tmp[0,card] = 1
             output = network(tmp)
             embeddings.append(output.squeeze().numpy())
             distances.append(networks.get_distance(anchor,output).item())
             c = lines[card][4]
-            c = c.split(',')
+            c = c.split(', ')
             if len(c) == 1:
                 colors.append(color_map[c[0]])
                 border_colors.append(color_map[c[0]])
@@ -527,8 +527,8 @@ def complete_draft(picks,network):
     siamese_distance = 0
     random_distance = 0
     with torch.no_grad():
-        picked  = torch.zeros((1,265))
-        random_picked = torch.zeros((1,265))
+        picked  = torch.zeros((1,266))
+        random_picked = torch.zeros((1,266))
         for pick in picks:
             anchor = network(picked)
             random_anchor = network(random_picked)
@@ -538,7 +538,7 @@ def complete_draft(picks,network):
             every_choice.append(choices)
             distances = list()
             for choice in choices:
-                tmp = torch.zeros((1,265))
+                tmp = torch.zeros((1,266))
                 tmp[0,choice] = 1
                 distances.append(networks.get_distance(anchor,network(tmp)).item())
             chosen_card = choices[np.argmin(distances)]
@@ -563,10 +563,10 @@ def point_cloud_path(network):
     card_dict = load_card_dict('card_dict.pt')
     inv_card_dict = {v:k for k,v in card_dict.items()}
 
-    with open('named_pickrates.csv', 'r') as f:
-        reader = csv.reader(f, delimiter = ';')
+    with open('firstpickrate_full.csv', 'r') as f:
+        reader = csv.reader(f, delimiter = ',')
         lines = [line for line in reader]
-        indizes = [i for i in range(265)]
+        indizes = [i for i in range(266)]
         pickrates = [float(lines[index][1]) for index in indizes]
     
     cards = list()
@@ -576,11 +576,11 @@ def point_cloud_path(network):
     labels = list()
     colors = list()
 
-    pick_path = 'E:/picks_2/'
+    pick_path = os.path.dirname(os.path.realpath(__file__)) + '/picks/'
     with open(pick_path+os.listdir(pick_path)[0], 'rb') as f:
         picks = np.load(f, allow_pickle = True)
         p1_picks = list()
-        for i in range(45):
+        for i in range(42):
             p1_picks.append(picks[i*8])
 
     with torch.no_grad():
@@ -588,8 +588,8 @@ def point_cloud_path(network):
             embeddings.append(network(torch.Tensor(pick[1])).view(1,-1).squeeze().numpy())
         
         every_choice,every_chosen,every_anchor,random_choices,random_anchors = complete_draft(p1_picks,network)
-        for card in range(265):
-            tmp = torch.zeros((1,265))
+        for card in range(266):
+            tmp = torch.zeros((1,266))
             tmp[0,card] = 1
             output = network(tmp)
             cards.append(output.squeeze().numpy())
@@ -611,7 +611,7 @@ def point_cloud_path(network):
         y = [row[1] for row in choices[i]]
         plt.scatter(x,y, c = 'blue')
         plt.scatter(chosens[i][0],chosens[i][1], c = 'red', s = 10, alpha = 0.5)
-        plt.scatter(tsne_embedding[265+i,0],tsne_embedding[265+i,1], c = 'green')
+        plt.scatter(tsne_embedding[266+i,0],tsne_embedding[266+i,1], c = 'green')
         plt.show()
     network = network.train()
     return tsne_embedding
@@ -622,10 +622,10 @@ def point_cloud_path_all_cards(network):
     card_dict = load_card_dict('card_dict.pt')
     inv_card_dict = {v:k for k,v in card_dict.items()}
 
-    with open('named_pickrates.csv', 'r') as f:
-        reader = csv.reader(f, delimiter = ';')
+    with open('firstpickrate_full.csv', 'r') as f:
+        reader = csv.reader(f, delimiter = ',')
         lines = [line for line in reader]
-        indizes = [i for i in range(265)]
+        indizes = [i for i in range(266)]
         pickrates = [float(lines[index][1]) for index in indizes]
     
     cards = list()
@@ -635,11 +635,11 @@ def point_cloud_path_all_cards(network):
     labels = list()
     colors = list()
 
-    pick_path = 'E:/picks_2/'
+    pick_path = 'picks'
     with open(pick_path+os.listdir(pick_path)[0], 'rb') as f:
         picks = np.load(f, allow_pickle = True)
         p1_picks = list()
-        for i in range(45):
+        for i in range(42):
             p1_picks.append(picks[i*8])
 
     with torch.no_grad():
@@ -649,8 +649,8 @@ def point_cloud_path_all_cards(network):
         every_choice,every_chosen,every_anchor,random_choices,random_anchors,siamese_distance,random_distance = complete_draft(p1_picks,network)
         print('Siamese distance: ' +str(siamese_distance))
         print('Random distance: ' + str(random_distance))
-        for card in range(265):
-            tmp = torch.zeros((1,265))
+        for card in range(266):
+            tmp = torch.zeros((1,266))
             tmp[0,card] = 1
             output = network(tmp)
             cards.append(output.squeeze().numpy())
@@ -680,12 +680,12 @@ def point_cloud_path_all_cards(network):
     chosens = [tsne_embedding[i] for i in every_chosen]
     random_chosens = [tsne_embedding[i] for i in random_choices]
 
-    plt.scatter(tsne_embedding[:265,0],tsne_embedding[:265,1], c = colors)
-    plt.plot(tsne_embedding[265:265+46,0],tsne_embedding[265:265+46,1], c = 'blue', label = 'Siamese path') 
+    plt.scatter(tsne_embedding[:266,0],tsne_embedding[:266,1], c = colors)
+    plt.plot(tsne_embedding[266:266+46,0],tsne_embedding[266:266+46,1], c = 'blue', label = 'Siamese path') 
     for i,choice in enumerate(chosens):
-        plt.plot([tsne_embedding[265+i,0],choice[0]],[tsne_embedding[265+i,1],choice[1]],'--',c = 'blue', alpha = 0.2)
+        plt.plot([tsne_embedding[266+i,0],choice[0]],[tsne_embedding[266+i,1],choice[1]],'--',c = 'blue', alpha = 0.2)
     for i,choice in enumerate(random_chosens):
-        plt.plot([tsne_embedding[265+46+i,0],choice[0]],[tsne_embedding[265+46+i,1],choice[1]],'--',c = 'green', alpha = 0.2)
+        plt.plot([tsne_embedding[266+46+i,0],choice[0]],[tsne_embedding[266+46+i,1],choice[1]],'--',c = 'green', alpha = 0.2)
     plt.plot(tsne_embedding[-46:,0],tsne_embedding[-46:,1], c = 'green', label = 'Random path')
     plt.legend()
     plt.show()
@@ -698,8 +698,8 @@ def plot_random_embeddings(network):
     inv_card_dict = {v:k for k,v in card_dict.items()}
     
     cards = list()
-    for i in range(265):
-        tmp = np.zeros(265)
+    for i in range(266):
+        tmp = np.zeros(266)
         tmp[i] = 1
         cards.append(torch.Tensor(tmp))
 
@@ -708,13 +708,13 @@ def plot_random_embeddings(network):
     colors = list()
 
     distances = list()
-    with open('named_pickrates.csv', 'r') as f:
-        reader = csv.reader(f, delimiter = ';')
+    with open('firstpickrate_full.csv', 'r') as f:
+        reader = csv.reader(f, delimiter = ',')
         lines = [line for line in reader]
-        indizes = [i for i in range(265)]
+        indizes = [i for i in range(266)]
         pickrates = [float(lines[index][1]) for index in indizes]
     with torch.no_grad():
-        empty = torch.zeros(1,265)
+        empty = torch.zeros(1,266)
         anchor = network(empty)
         embeddings.append(anchor.squeeze().numpy())
         labels.append('Empty set')
@@ -772,7 +772,7 @@ def correct_picks(network,folder_name):
 
                 distances = list()
                 for i in range(len(choices)):
-                    elem = torch.zeros((1,265))
+                    elem = torch.zeros((1,266))
                     elem[0,choices[i]] = 1.0
                     distances.append(networks.get_distance(out1,network(elem)).item())
 
@@ -941,72 +941,104 @@ def plot_pickrate_rarity(filename):
 
 
 def plot_accuracy_per_pick(network):
-    with open('exact_correct.tsv') as f:
-        reader = csv.reader(f, delimiter = "\t")
-        lines = [line for line in reader]
-    accuracies = [[list() for _ in range(45)] for __ in range(5)]
-    for line in lines[1:]:
-        for i,elem in enumerate(line[3:]):
-            accuracies[i][int(line[1])-1].append(int(elem))
-    pick_number = [0 for _ in range(45)]
-    correct_picks = [0 for _ in range(45)]
+    # with open('exact_correct.tsv') as f:
+    #     reader = csv.reader(f, delimiter = "\t")
+    #     lines = [line for line in reader]
+    # accuracies = [[list() for _ in range(45)] for __ in range(5)]
+    # for line in lines[1:]:
+    #     for i,elem in enumerate(line[3:]):
+    #         accuracies[i][int(line[1])-1].append(int(elem))
+    pick_number = [0 for _ in range(42)]
+    correct_picks = [0 for _ in range(42)]
+    top2 = 0
+    top3 = 0
     pick_distance = list()
     pick_numbers = list()
-    folder_name = 'E:/picks_2/'
-    with open(folder_name+np.random.choice(os.listdir(folder_name)),'rb') as f:
-        data = np.load(f, allow_pickle = True)
-        for pick in data:
-            chosen_num = int(sum(pick[1]))
-            pick_number[chosen_num] += 1
-            choices = pick[0]
-            pick_numbers.append(len(choices))
-            anchor = pick[1]
-            correct_choice = np.argmax(pick[2])
-            with torch.no_grad():
-                out1 = network(torch.Tensor(anchor).view(1,-1))
+    folder_name = 'testpicks/'
+    for filename in os.listdir(folder_name):
+        file = os.path.join(folder_name, filename)
+        print(file)
+        with open(file,'rb') as f:
+            data = np.load(f, allow_pickle = True)
+            for pick in data:
+                chosen_num = int(sum(pick[1]))
+                pick_number[chosen_num] += 1
+                choices = pick[0]
+                pick_numbers.append(len(choices))
+                anchor = pick[1]
+                correct_choice = np.argmax(pick[2])
+                with torch.no_grad():
+                    out1 = network(torch.Tensor(anchor).view(1,-1))
 
-                distances = list()
-                for i in range(len(choices)):
-                    elem = torch.zeros((1,265))
-                    elem[0,choices[i]] = 1.0
-                    distances.append(networks.get_distance(out1,network(elem)).item())
+                    distances = list()
+                    for i in range(len(choices)):
+                        elem = torch.zeros((1,266))
+                        elem[0,choices[i]] = 1.0
+                        distances.append(networks.get_distance(out1,network(elem)).item())
 
-                ranking = [x for _,x in sorted(zip(distances,[y for y in range(len(distances))]))]
-                if choices[ranking[0]] == correct_choice:
-                    correct_picks[chosen_num] += 1
-        f.close()
-        del data
-    plt.plot([j for j in range(15)],[correct_picks[i]/pick_number[i] for i in range(15)], c = 'lightslategrey', label = 'SiameseBot')
-    plt.plot([j for j in range(15,30)],[correct_picks[i]/pick_number[i] for i in range(15,30)], c = 'lightslategrey')
-    plt.plot([j for j in range(30,45)],[correct_picks[i]/pick_number[i] for i in range(30,45)], c = 'lightslategrey')
+                    ranking = [x for _,x in sorted(zip(distances,[y for y in range(len(distances))]))]
+                    if choices[ranking[0]] == correct_choice:
+                        correct_picks[chosen_num] += 1
+                        top2 += 1
+                        top3 += 1
+                    elif choices[ranking[1]] == correct_choice:
+                        top2 += 1
+                        top3 += 1
+                    elif choices[ranking[2]] == correct_choice:
+                        top3 += 1
+            f.close()
+            del data
+    correct_picks[13],correct_picks[27],correct_picks[41]=[1,1,1]
+    pick_number[13],pick_number[27],pick_number[41]=[1,1,1]
+    plt.plot([j for j in range(14)],[correct_picks[i]/pick_number[i] for i in range(14)], c = 'lightslategrey', label = 'SiameseBot')
+    plt.plot([j for j in range(14,28)],[correct_picks[i]/pick_number[i] for i in range(14,28)], c = 'lightslategrey')
+    plt.plot([j for j in range(28,42)],[correct_picks[i]/pick_number[i] for i in range(28,42)], c = 'lightslategrey')
 
-    plt.plot([j for j in range(15)],[sum(accuracies[0][i])/len(accuracies[0][i]) for i in range(15)], c = 'red', label = 'RandomBot')
-    plt.plot([j for j in range(15,30)],[sum(accuracies[0][i])/len(accuracies[0][i]) for i in range(15,30)], c = 'red')
-    plt.plot([j for j in range(30,45)],[sum(accuracies[0][i])/len(accuracies[0][i]) for i in range(30,45)], c = 'red')
+    # plt.plot([j for j in range(14)],[sum(accuracies[0][i])/len(accuracies[0][i]) for i in range(14)], c = 'red', label = 'RandomBot')
+    # plt.plot([j for j in range(14,28)],[sum(accuracies[0][i])/len(accuracies[0][i]) for i in range(14,28)], c = 'red')
+    # plt.plot([j for j in range(28,42)],[sum(accuracies[0][i])/len(accuracies[0][i]) for i in range(28,42)], c = 'red')
 
-    plt.plot([j for j in range(15)],[sum(accuracies[1][i])/len(accuracies[1][i]) for i in range(15)], c = 'blue', label = 'RaredraftBot')
-    plt.plot([j for j in range(15,30)],[sum(accuracies[1][i])/len(accuracies[1][i]) for i in range(15,30)], c = 'blue')
-    plt.plot([j for j in range(30,45)],[sum(accuracies[1][i])/len(accuracies[1][i]) for i in range(30,45)], c = 'blue')
+    # plt.plot([j for j in range(14)],[sum(accuracies[1][i])/len(accuracies[1][i]) for i in range(14)], c = 'blue', label = 'RaredraftBot')
+    # plt.plot([j for j in range(14,28)],[sum(accuracies[1][i])/len(accuracies[1][i]) for i in range(14,28)], c = 'blue')
+    # plt.plot([j for j in range(28,42)],[sum(accuracies[1][i])/len(accuracies[1][i]) for i in range(28,42)], c = 'blue')
 
-    plt.plot([j for j in range(15)],[sum(accuracies[2][i])/len(accuracies[2][i]) for i in range(15)], c = 'green', label = 'DraftsimBot')
-    plt.plot([j for j in range(15,30)],[sum(accuracies[2][i])/len(accuracies[2][i]) for i in range(15,30)], c = 'green')
-    plt.plot([j for j in range(30,45)],[sum(accuracies[2][i])/len(accuracies[2][i]) for i in range(30,45)], c = 'green')
+    # plt.plot([j for j in range(14)],[sum(accuracies[2][i])/len(accuracies[2][i]) for i in range(14)], c = 'green', label = 'DraftsimBot')
+    # plt.plot([j for j in range(14,28)],[sum(accuracies[2][i])/len(accuracies[2][i]) for i in range(14,28)], c = 'green')
+    # plt.plot([j for j in range(28,42)],[sum(accuracies[2][i])/len(accuracies[2][i]) for i in range(28,42)], c = 'green')
 
-    plt.plot([j for j in range(15)],[sum(accuracies[3][i])/len(accuracies[3][i]) for i in range(15)], c = 'purple', label = 'BayesBot')
-    plt.plot([j for j in range(15,30)],[sum(accuracies[3][i])/len(accuracies[3][i]) for i in range(15,30)], c = 'purple')
-    plt.plot([j for j in range(30,45)],[sum(accuracies[3][i])/len(accuracies[3][i]) for i in range(30,45)], c = 'purple')
+    # plt.plot([j for j in range(14)],[sum(accuracies[3][i])/len(accuracies[3][i]) for i in range(14)], c = 'purple', label = 'BayesBot')
+    # plt.plot([j for j in range(14,28)],[sum(accuracies[3][i])/len(accuracies[3][i]) for i in range(14,28)], c = 'purple')
+    # plt.plot([j for j in range(28,42)],[sum(accuracies[3][i])/len(accuracies[3][i]) for i in range(28,42)], c = 'purple')
 
-    plt.plot([j for j in range(15)],[sum(accuracies[4][i])/len(accuracies[4][i]) for i in range(15)], c = 'orange', label = 'NNetBot')
-    plt.plot([j for j in range(15,30)],[sum(accuracies[4][i])/len(accuracies[4][i]) for i in range(15,30)], c = 'orange')
-    plt.plot([j for j in range(30,45)],[sum(accuracies[4][i])/len(accuracies[4][i]) for i in range(30,45)], c = 'orange')
-    plt.xlim(0,45)
+    # plt.plot([j for j in range(14)],[sum(accuracies[4][i])/len(accuracies[4][i]) for i in range(14)], c = 'orange', label = 'NNetBot')
+    # plt.plot([j for j in range(14,28)],[sum(accuracies[4][i])/len(accuracies[4][i]) for i in range(14,28)], c = 'orange')
+    # plt.plot([j for j in range(28,42)],[sum(accuracies[4][i])/len(accuracies[4][i]) for i in range(28,42)], c = 'orange')
+    plt.xlim(0,42)
     plt.ylim(0,1)
     plt.xlabel('Pick')
     plt.ylabel('Accuracy')
-    print(sum(correct_picks)/sum(pick_number))
-    plt.legend(ncol = 2, loc = 4)
+    total_acc = sum(correct_picks)/sum(pick_number)
+    top2_acc = top2/sum(pick_number)
+    top3_acc = top3/sum(pick_number)
+    pick_accs = [correct_picks[i]/pick_number[i] for i in range(42)]
+    #plt.legend(ncol = 2, loc = 4)
     plt.savefig('plots/accuracy_per_pick_comp.pdf', bbox_inches='tight' )
-    plt.show()
+    #plt.show()
+    
+    # Specify the CSV file path and name
+    csv_file = "plots/test_results.csv"
+    # Define the data to write to the CSV file
+    data = [["Metric", "Accuracy"], ["Top-1 Accuracy", total_acc], ["Top-2 Accuracy", top2_acc], ["Top-3 Accuracy", top3_acc]]
+    for pick, acc in enumerate(pick_accs, start=1):
+        pack_num = (pick - 1) // 14 + 1  # Calculate the pack number
+        card_num = (pick - 1) % 14 + 1  # Calculate the card number within the pack
+        data.append(["Pack {} Pick {}".format(pack_num, card_num), acc])
+    # Write the data to the CSV file
+    with open(csv_file, "w", newline="") as file:
+        writer = csv.writer(file)
+        writer.writerows(data)
+    # Print a message indicating the file has been written
+    print("Accuracy results have been written to test_results.csv.")
 
 def load_card_dict(path):
     with open(path,'rb') as file:
@@ -1035,13 +1067,24 @@ def plot_embedding_dimension(path):
     plt.savefig('plots/embedding_comparison.pdf', bbox_inches='tight' )
     plt.show()
 
+siamese_model = networks.Siamese(266, 256)
+siamese_model.load_state_dict(torch.load('network2epochsfinal.pt'))
+siamese_model.eval()
+network=siamese_model
+plot_accuracy_per_pick(siamese_model)
+
+#point_cloud(siamese_model)
+#point_cloud_rarity(siamese_model)
+#plot_distance_against_fpr(siamese_model)
+#point_cloud_anchors(siamese_model)
+#point_cloud_anchors_colors(siamese_model)
 
 #plot_embedding_dimension('revamp/Dimension_comparison/')
-
+#compute_pick_chance()
 #preprocess_integer_dataset('clean_logs/integer_logs_baseline2/')
 #preprocess_feature_dataset('clean_logs/feature_logs_baseline2_ordered/')
-#pickrates_to_cards('card_dict.pt', 'firstpickrates.csv')
-# plot_pickrate(['named_firstpickrates.csv','named_pickrates.csv'])
-# plot_pickrate_against_rarity('named_firstpickrates.csv')
+#pickrates_to_cards('card_dictDMU.pt', 'firstpickrates.csv')
+# plot_pickrate(['firstpickrate_test.csv','firstpickrate_full.csv'])
+# plot_pickrate_against_rarity('firstpickrate_test.csv')
 #compute_firstpick_chance('E:/training_mtg/')
-#plot_pickrate_ratings_rarity('named_pickrates.csv')
+#plot_pickrate_ratings_rarity('firstpickrate_full.csv')

@@ -40,7 +40,7 @@ class mtg_dataset(Dataset):
     def __len__(self):
         return len(self.anchors)
 
-    def __getitem__(self,index):
+    def __getitSiam__(self,index):
         return self.anchors[index],self.positives[index],self.negatives[index]
 
 class mtg_metadataset(Dataset):

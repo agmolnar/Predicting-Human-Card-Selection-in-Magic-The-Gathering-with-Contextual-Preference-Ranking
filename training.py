@@ -130,8 +130,8 @@ def evaluate_preferences(dataset,net):
     return correct_comparisons/comparisons
 
 def main(training_path,test_path,pick_path):
-    num_feature = 265
-    epochs = 50
+    num_feature = 266
+    epochs = 2
     output_dim = 256
     siamese = models.Siamese(num_feature,output_dim)
 
@@ -144,9 +144,9 @@ def main(training_path,test_path,pick_path):
     siamese = train_siamese(files = training_files,eval_dataloader= DataLoader(eval_dataset,batch_size=64),epochs = epochs, network = siamese,pick_path = pick_path)
 
 if __name__ == "__main__":
-    training_path = 'E:/training_mtg_datasets_2/'
-    test_path = os.path.dirname(os.path.realpath(__file__)) + '/Data//test_datasets/'
-    pick_path = os.path.dirname(os.path.realpath(__file__)) + '/Data//picks/'
+    training_path = 'training_datasets/'
+    test_path = os.path.dirname(os.path.realpath(__file__)) + '/test_datasets/'
+    pick_path = os.path.dirname(os.path.realpath(__file__)) + '/testpicks/'
     main(training_path,test_path,pick_path)
 
 
