@@ -1,3 +1,9 @@
+# Adapted code for Master Thesis
+The purpose is to enable the use of 17lands.com Draft datasets in training this model.
+
+-Added preprocessing file
+
+
 # Predicting Human Card Selection in Magic: The Gathering with Contextual Preference Ranking
 Code and explanation for IEEE CoG paper "Predicting Human Card Selection in Magic: The Gathering with Contextual Preference Ranking"
 
